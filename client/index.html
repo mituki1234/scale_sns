@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scale</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            font-family: "M PLUS 1p", sans-serif;
+        }
+        .message-container {
+            display: flex;
+            flex-flow: column; /*flexを盾にする！ */
+            align-items: center; /* メッセージボックスを中央に配置 */
+            padding: 20px;
+            box-sizing: border-box;
+            height: 80vh;
+            overflow-y: auto; /* スクロールが必要な時のみ表示 */
+        }
+        .message-top{
+            animation: expandHeight 1s forwards;
+            width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .message-box {
+            opacity: 1;
+            width: 50%; /* 幅を60%に設定 */
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* メッセージ内容を左揃えにする */
+            height: auto;
+        }
+        .message-content {
+            word-break: break-all;
+            margin-left: 1.05em;
+            font-size: 1.05em;
+        }
+        .date {
+            font-size: 12px;
+            color: #888;
+            text-align: right;
+            margin-top: 5px;
+        }
+        .username{
+            font-size: 0.8em;
+            color: #000;
+            text-align: left;
+            margin-top: 5px;
+            flex-grow: 1;
+        }
+        .user-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .write {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #fff;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: calc(100% - 20%);
+            max-width: 60%;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+        }
+        .messageInput {
+            flex: 1;
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .sendButton {
+            padding: 8px 15px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .setting-button{
+            position: relative;
+            height: 4em;
+            bottom: 100px;
+            left: 40px;
+            transition: all 0.3s 0s ease;
+            opacity: 1;
+        }
+        .setting-button:hover{
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <h1>Scale</h1>
+    <div class="message-container" id="messageContainer">
+        <!-- Messages will be dynamically added here -->
+    </div>
+    <div class="write">
+        <input type="text" class="messageInput" placeholder="Type your message...">
+        <button class="sendButton">Send</button>
+    </div>
+    <img src="./setting.png" class="setting-button" onclick="alert('gahaku')">
+</body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
+    <script>
+        var connection = new WebSocket('ws://localhost:3001');
+
+        var sendButton = document.querySelector('.sendButton');
+        var messageInput = document.querySelector('.messageInput');
+        var messageContainer = document.getElementById('messageContainer');
+
+        var arr = getCookieArray();
+
+        connection.onerror = function(error) {
+            console.error('ウェブソケットエラー: ', error);
+        };
+        connection.onopen = function(event) {
+            console.log('ウェブソケットが接続されました');
+            if(document.cookie){
+                var value = {};
+                value.Token = arr['token'];
+                value.type = 'logincheck';
+                connection.send(JSON.stringify(value));
+            } else {
+                var value = {};
+                value.Token = 'nothing';
+                value.type = 'logincheck';
+                connection.send(JSON.stringify(value));
+            }
+        };
+        sendButton.addEventListener('click', function() {
+            var message = {};
+            message.message = messageInput.value.trim();
+            message.date = Date.now();
+            message.type = 'message';
+            message.username = arr['token'];
+            if (message.message !== '') {
+                connection.send(JSON.stringify(message));
+                messageInput.value = '';
+            }
+        });
+        connection.onmessage = function(event) {
+            var receivedMessage = JSON.parse(event.data);
+            if(receivedMessage.type === 'LoginCheckUseToken'){
+                if(receivedMessage.success){
+
+                } else {
+                    const mainpageURL = './login.html';
+                    window.location.replace(mainpageURL);
+                }
+            } else {
+                displayMessage(receivedMessage);
+            }
+        };
+
+        async function displayMessage(message) {
+            var ifwait = 0;
+            var messageBlock = document.createElement('div');
+            var messageContent = document.createElement('div');
+            var dateSpan = document.createElement('span');
+            var topdiv = document.createElement('div');
+            var usernamep = document.createElement('span');
+            var userIcon = document.createElement('img');
+
+            if (parseInt(message.date) + 1000 >= Date.now()) {
+                await pagetopwait();
+                ifwait = 1;
+            }
+
+            topdiv.className = 'message-top';
+            messageBlock.classList.add('message-box');
+            messageContent.textContent = message.message;
+            messageContent.classList.add('message-content');
+            messageBlock.id = message.ID;
+            dateSpan.textContent = timeAgo(parseInt(message.date));
+            dateSpan.classList.add('date');
+            usernamep.className = 'username';
+            usernamep.innerHTML = message.username;
+            userIcon.className = 'user-icon';
+            userIcon.src = `data:image/png;base64,${message.icon}`; // Base64エンコードされたアイコンを設定
+
+            messageBlock.appendChild(messageContent);
+            messageBlock.prepend(topdiv);
+
+            topdiv.appendChild(userIcon); // ユーザーアイコンを追加
+            topdiv.appendChild(usernamep);
+            topdiv.appendChild(dateSpan);
+            // 新着メッセージを最上部に追加
+            messageContainer.prepend(messageBlock);
+            if (ifwait == 1) {
+                await nuun(messageBlock);
+            } else if(parseInt(message.date) + 1000 <= Date.now()){
+                var bottom = messageContainer.scrollHeight - messageContainer.clientHeight;
+                messageContainer.scrollTop = bottom * -1;
+                messageBlock.classList.add = 'show';
+            }
+        }
+
+        function timeAgo(timestamp) {
+            const now = new Date();
+            const seconds = Math.floor((now - timestamp) / 1000);
+
+            let interval = Math.floor(seconds / 31536000); // years
+            if (interval >= 1) {
+                return interval + ' years ago';
+            }
+            interval = Math.floor(seconds / 2592000); // months
+            if (interval >= 1) {
+                return interval + ' months ago';
+            }
+            interval = Math.floor(seconds / 86400); // days
+            if (interval >= 1) {
+                return interval + ' days ago';
+            }
+            interval = Math.floor(seconds / 3600); // hours
+            if (interval >= 1) {
+                return interval + ' hours ago';
+            }
+            interval = Math.floor(seconds / 60); // minutes
+            if (interval >= 1) {
+                return interval + ' minutes ago';
+            }
+            return Math.floor(seconds) + ' seconds ago'; // seconds
+        }
+
+        // pagetopwait 関数を非同期関数として定義
+        async function pagetopwait() {
+            return new Promise(function(resolve, reject) {
+                var waitpagetop = setInterval(function() {
+                    if (messageContainer.scrollTop * 1 -100 <= 0) {
+                        clearInterval(waitpagetop);
+                        resolve(); // Promise を解決して非同期処理を完了する
+                    }
+                }, 50);
+            });
+        }
+        async function nuun(height){
+            return new Promise(function(resolve,reject){
+                var height_save = height.clientHeight - 20;
+                height.style.height = 0 + 'px';
+                var count = 0;
+                var countback = 0;
+                height.classList.add('show');
+                var nuunoftop = setInterval(function() {
+                    countback = count;
+                    count += (height_save - count) / 15;
+                    height.style.height = count + 'px';
+                    messageContainer.scrollTop -= Math.floor(count - countback);
+                    if(height_save <= count + 0.1){
+                        clearInterval(nuunoftop);
+                        resolve();
+                    }
+                } ,10);
+            })
+        }
+
+        // 連想配列に格納
+        function getCookieArray(){
+            var arr = new Array();
+            if(document.cookie != ''){
+                var tmp = document.cookie.split('; ');
+                for(var i=0;i<tmp.length;i++){
+                    var data = tmp[i].split('=');
+                    arr[data[0]] = decodeURIComponent(data[1]);
+                }
+            }
+            return arr;
+        }
+    </script>
+</html>

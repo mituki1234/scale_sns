@@ -1,0 +1,30 @@
+[
+  {
+    "id": "mituki",
+    "username": "mituki1234",
+    "password": "password1",
+    "token": "rKv7JdbvLm5zb0d131Gg",
+    "icon": "./usersdata/usersimage/default_user_icon.png"
+  },
+  {
+    "password": "password2",
+    "username": "Mitukisub",
+    "id": "Mitukisub",
+    "token": "nHJm5PhY73UGMdlitNqJ",  
+    "icon": "./usersdata/usersimage/default_user_icon.png"
+  },
+  {
+    "password": "kirekirekireru",
+    "username": "mitukisubdess",
+    "id": "mitukisub2",
+    "token": "YRKTkUHyX1Edc3DuHKrU",
+    "icon": "./usersdata/usersimage/default_user_icon.png"
+  },
+  {
+    "id": "mitukiphone",
+    "username": "mitukisubphone",
+    "password": "korosuzolll",
+    "token": "5rzDD5PBx51QPDpyEnde",
+    "icon": "./usersdata/usersimage/default_user_icon.png"
+  }
+]

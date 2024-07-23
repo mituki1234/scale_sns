@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログインフォーム</title>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'M PLUS 1p', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-container {
+            width: 400px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .login-container h1 {
+            text-align: center;
+            color: #333333;
+            margin-bottom: 30px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo img {
+            width: 80px; /* ロゴのサイズを調整 */
+            height: auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 1.05em;
+            color: #555555;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 90%;
+            padding: 10px;
+            font-size: 0.95em;
+            border: 1px solid #cccccc;
+            border-radius: 5px;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            font-size: 0.9em;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .setupgo{
+            text-align: center;
+            font-size: 0.8em;
+            opacity: 1;
+        }
+        .setupgo:hover{
+            opacity: 0.5;
+            transition: all 0.3s 0s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            Scale
+        </div>
+        <h1>ログイン</h1>
+        <div class="form-group">
+            <label for="username">ユーザー名</label>
+            <input type="text" id="username" name="username" placeholder="ユーザー名を入力してください">
+        </div>
+        <div class="form-group">
+            <label for="password">パスワード</label>
+            <input type="password" id="password" name="password" placeholder="パスワードを入力してください">
+        </div>
+        <div class="form-group">
+            <button type="button" id="loginbutton">ログイン</button>
+        </div>
+        <div class="form-group">
+            <a href='./signup.html'><p class="setupgo">アカウントがない場合はこちら</p></a>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
+    <script>
+        var connection = new WebSocket("ws://localhost:3000");
+
+        var Loginbutton = document.querySelector("#loginbutton");
+
+        // サーバーからの応答を処理
+        connection.onmessage = function(event) {
+                    // keyを指定して取得
+        // 「 key1=val1; key2=val2; key3=val3; ・・・ 」というCookie情報が保存されているとする
+            var receivedMessage = JSON.parse(event.data);
+            if (receivedMessage.type === 'login') {
+                if (receivedMessage.success) {
+                    console.log('ログイン成功');
+                    const mainpageURL = "./index.html";
+                    document.cookie = "key1=token; max-age=0";
+                    if (receivedMessage.token) {
+                        setCookie('token', receivedMessage.token, 7); // 7日間有効なクッキーを設定
+                    }
+                    window.open(mainpageURL);
+                    // ログイン成功後の処理をここに追加する
+                } else {
+                    console.log('ログイン失敗');
+                    // ログイン失敗時の処理をここに追加する
+                    alert('ログインに失敗しました。ユーザー名またはパスワードが正しくありません。');
+                }
+            } else if (receivedMessage.type === "UseTokenlogin"){
+                if (receivedMessage.success) {
+                    console.log('ログイン成功');
+                    const mainpageURL = "./index.html";
+                    window.location.replace(mainpageURL);
+                }
+            }
+        };
+        connection.onopen = function(event) {
+            console.log('WebSocket connected');
+
+            var arr = getCookieArray();
+            var value = {};
+            value.Token = arr['token'];
+            value.type = "Token";
+            console.log(value);
+            connection.send(JSON.stringify(value));
+        };
+        // ログイン処理
+        Loginbutton.addEventListener("click", function() {
+            var login = {};
+
+            var username = document.querySelector("#username").value.trim();
+            var password = document.querySelector("#password").value.trim();
+
+            if (username !== "" && password !== "") {
+                login.type = "login";
+                login.username = username;
+                login.password = password;
+                
+                connection.send(JSON.stringify(login));
+            } else {
+                alert("ユーザー名とパスワードを入力してください。");
+            }
+        });
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                let date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+        }
+
+        // 連想配列に格納
+        function getCookieArray(){
+            var arr = new Array();
+            if(document.cookie != ''){
+                var tmp = document.cookie.split('; ');
+                for(var i=0;i<tmp.length;i++){
+                    var data = tmp[i].split('=');
+                    arr[data[0]] = decodeURIComponent(data[1]);
+                }
+            }
+            return arr;
+        }
+    </script>
+</body>
+</html>
