@@ -1,2 +1,3 @@
 # Scale_sns
-it's mine.
+server: nodejs
+client: html css javascript
