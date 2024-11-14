@@ -67,7 +67,7 @@ wss.on('connection', function connection(ws) {
         if (receivedMessage.type === 'login') {
             IfloginOk(ws, receivedMessage);
 
-        } else if (receivedMessage.type === 'message') {
+        } else if (receivedMessage.type === "message") {
             handleMessage(ws, wss, messagesFilePath, clients, WebSocket, receivedMessage);
 
         } else if (receivedMessage.type === 'Token'){
