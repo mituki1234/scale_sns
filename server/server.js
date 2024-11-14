@@ -7,17 +7,6 @@ const { IfloginOk } = require('./login');
 const { log_in_using_token, check_login_state_in_token } = require('./tokencheck');
 const { sign_up_check } = require('./signup');
 
-// Expressサーバーを作成
-const app = express();
-const port = 3000;
-
-// 静的ファイルを提供
-app.use(express.static(path.join(__dirname, '../client')));
-
-app.listen(port, () => {
-    console.log(`HTTPサーバーがポート${port}で起動しました`);
-});
-
 // WebSocketサーバーを作成
 const wss = new WebSocket.Server({ port: 3001 });
 
